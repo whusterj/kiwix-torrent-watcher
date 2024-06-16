@@ -13,7 +13,6 @@ For now, integration with [Transmission BitTorrent](https://transmissionbt.com/)
 
 See also [Kiwix content listing](https://wiki.kiwix.org/wiki/Content (http://download.kiwix.org/zim/wikipedia))
 
-
 ### Usage
 
     python __main__.py zim.lib /data/documents/kiwix/
@@ -21,3 +20,5 @@ See also [Kiwix content listing](https://wiki.kiwix.org/wiki/Content (http://dow
 ### License
 
 Code under GPLv3 license
+
+Forked from https://gitlab.com/adrienandrem/kiwix-torrent-watcher by Adrien Andre

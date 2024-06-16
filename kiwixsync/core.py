@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun May 17 11:52:03 2020
-
-@author: @author: Adrien André <adr.andre@laposte.net>
-"""
-
 import os
 
 __all__ = ["Zim_File"]

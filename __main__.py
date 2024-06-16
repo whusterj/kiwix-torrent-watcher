@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jun 27 20:53:46 2020
-
-@author: Adrien André <adr.andre@laposte.net>
-"""
 import argparse
 import glob
 import logging

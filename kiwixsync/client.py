@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Sep  9 20:35:25 2020
-
-@author: aandre
-"""
 import logging
 
 from decouple import config

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 10 18:23:40 2020
-
-@author: aandre
-"""
 from kiwixsync import Zim_File
 
 
