@@ -154,6 +154,7 @@ def main(library, directory, url):
 
         if not remote:
             logging.warning("No remote match for tracked zim %s (renamed or discontinued upstream?)", zim)
+            notify(f"WARNING: no remote match for tracked zim {zim} (renamed or discontinued upstream?)")
             continue
 
         torrent_file = remote[0].torrent("http://download.kiwix.org")
