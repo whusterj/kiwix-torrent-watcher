@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 
-from kiwixsync import Transmission, Zim_File, ZimFileException
+from kiwixsync import Transmission, Zim_File, ZimFileException, notify
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
@@ -142,12 +142,14 @@ def main(library, directory, url):
         if not local:
             # Add torrent to BT client
             downloader.add(torrent_file)
+            notify(f"New ZIM download queued: {remote[0].filename}")
         else:  # zim present
             latest = remote[0]
             last_present = latest.filename in [zfile.filename for zfile in local]
             if not last_present:
                 # Add torrent to BT client
                 downloader.add(torrent_file)
+                notify(f"ZIM update queued: {latest.filename}")
 
 
 if __name__ == "__main__":
