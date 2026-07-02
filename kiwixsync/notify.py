@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 from decouple import config
-from nio import AsyncClient, JoinError, LoginError, RoomSendError
 
 __all__ = ["notify"]
 
@@ -15,6 +14,15 @@ async def _send(message):
 
     if not all([homeserver, user, password, room_id]):
         logging.debug("Matrix notification skipped: MATRIX_* env vars not configured.")
+        return
+
+    try:
+        from nio import AsyncClient, JoinError, LoginError, RoomSendError
+    except ImportError:
+        logging.warning(
+            "MATRIX_* env vars are set but matrix-nio is not installed. "
+            "Install it with: pip install matrix-nio"
+        )
         return
 
     client = AsyncClient(homeserver, user)
@@ -40,7 +48,9 @@ async def _send(message):
 
 
 def notify(message):
-    """Send a Matrix notification. No-ops silently if MATRIX_* env vars are unset."""
+    """Send a Matrix notification. No-ops silently if MATRIX_* env vars are
+    unset, or if matrix-nio is not installed (an optional dependency —
+    see requirements-notify.txt)."""
     try:
         asyncio.run(_send(message))
     except Exception:

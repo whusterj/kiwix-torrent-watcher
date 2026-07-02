@@ -34,21 +34,31 @@ Typically run on a schedule via cron:
 
     0 3 * * * cd /path/to/kiwix-torrent-watcher && .venv/bin/python __main__.py zim.lib /path/to/zim/directory/ >> /path/to/log/kiwix-torrent-watcher.log 2>&1
 
-### Matrix notifications
+### Matrix notifications (optional)
 
-When a new ZIM (or a newer version of a tracked ZIM) is detected and queued for
-download, the watcher can post a notification to a Matrix room via a bot
-account. This is optional — set these in `.env` to enable it:
+When a new ZIM (or a newer version of a tracked ZIM) is detected and queued
+for download — or when something goes wrong (a tracked archive has no
+remote match, a download fails) — the watcher can post a notification to a
+Matrix room via a bot account.
+
+This is an **optional feature with an optional dependency** — matrix-nio is
+not in the core `requirements.txt`. To enable it:
+
+    pip install -r requirements-notify.txt
+
+Then set these in `.env`:
 
     MATRIX_HOMESERVER=http://your.homeserver:8008
     MATRIX_USER=bot
     MATRIX_PASSWORD=your-bot-password
     MATRIX_ROOM_ID=!yourRoomId:your.matrix.server
 
-If any of these are unset, notifications are silently skipped — the rest of
-the watcher's behavior is unaffected. Notification failures (login errors,
-network issues, etc.) are logged but never crash the watcher — a Matrix
-hiccup should never block a ZIM download.
+If any of these are unset, or matrix-nio isn't installed, notifications are
+silently skipped (or, if the env vars are set but the dependency is
+missing, a one-line warning tells you how to install it) — the rest of the
+watcher's behavior is unaffected either way. Notification failures (login
+errors, network issues, etc.) are logged but never crash the watcher — a
+Matrix hiccup should never block a ZIM download.
 
 The bot account must first be invited to the target room (from any Matrix
 client); the watcher's Matrix client auto-joins on each run if not already a
