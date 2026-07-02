@@ -1,0 +1,3 @@
+# Optional: enables Matrix notifications (kiwixsync/notify.py). Not required
+# to run the watcher — see README.md "Matrix notifications" section.
+matrix-nio==0.25.2
