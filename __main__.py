@@ -3,10 +3,13 @@ import argparse
 import glob
 import logging
 import os
-import subprocess
+import re
 import sys
+import urllib.request
 
 from kiwixsync import Transmission, Zim_File, ZimFileException, notify
+
+ZIM_HREF_RE = re.compile(r'href="([^"]+\.zim)"')
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
@@ -46,28 +49,39 @@ def decode_zim_paths(paths):
     return zims
 
 
-def list_remote():
-    """List remote zim files"""
-    zims = set()
+def list_remote(library):
+    """List remote zim files for the categories referenced in library.
 
-    # Try to read a cached list from file
-    try:
-        with open("remote_zims.txt", "rb") as f:
-            return decode_zim_paths(f.read())
-    except FileNotFoundError:
-        pass
+    Fetches each category's plain HTTPS directory listing (e.g.
+    https://download.kiwix.org/zim/wikipedia/) and parses the .zim
+    filenames out of the HTML index. Always fetches fresh — never cached,
+    since a stale cache would silently prevent the watcher from ever
+    detecting new ZIM versions.
 
-    # If it's not cached locally, then get a fresh list from the server
-    process = subprocess.Popen("./list_remote.sh", stdout=subprocess.PIPE)
-    out, err = process.communicate()
+    Kiwix category directories match the first underscore-delimited token
+    of the tracked radical (e.g. "wikipedia_en_all_maxi" -> "wikipedia").
+    This replaced an rsync-based listing (download.kiwix.org's rsync daemon
+    has been decommissioned as of their migration to hub.kiwix.org).
+    """
+    categories = sorted({radical.split("_")[0] for radical in library})
+    lines = []
 
-    if err:
-        logging.warn("Error while listing remote files: %s", err)
+    for category in categories:
+        url = f"https://download.kiwix.org/zim/{category}/"
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                html = resp.read().decode("utf-8", errors="replace")
+        except Exception as exc:
+            logging.warning("Error listing remote category %s: %s", category, exc)
+            continue
 
-    if out:
-        decode_zim_paths(out)
+        for filename in ZIM_HREF_RE.findall(html):
+            lines.append(f"{category}/{filename}")
 
-    return zims
+    if not lines:
+        return set()
+
+    return decode_zim_paths("\n".join(lines).encode("utf-8"))
 
 
 def find_missing(local_files, remote_files):
@@ -125,7 +139,7 @@ def main(library, directory, url):
     logging.debug("Local files: %s" % [zfile.filename for zfile in sorted(zims_local)])
 
     # List remote files
-    files_remote = list_remote()
+    files_remote = list_remote(library)
     zims_remote = [zfile for zfile in files_remote if zfile.basename in library]
     logging.debug("Remote files: %s" % [zfile.filename for zfile in zims_remote])
 
@@ -137,6 +151,11 @@ def main(library, directory, url):
         )
         logging.debug("Local: %s", [zfile.filename for zfile in local])
         logging.debug("Remote: %s", [zfile.filename for zfile in remote])
+
+        if not remote:
+            logging.warning("No remote match for tracked zim %s (renamed or discontinued upstream?)", zim)
+            continue
+
         torrent_file = remote[0].torrent("http://download.kiwix.org")
 
         if not local:

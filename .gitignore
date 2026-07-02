@@ -2,3 +2,4 @@
 .venv/
 .coverage
 .env
+remote_zims.txt
