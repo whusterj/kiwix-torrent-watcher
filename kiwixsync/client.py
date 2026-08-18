@@ -6,12 +6,6 @@ from transmission_rpc import Client
 __all__ = ["BitTorrent_Client", "Transmission"]
 
 
-HOST = config("TR_HOST")
-PORT = config("TR_PORT", cast=int)
-USERNAME = config("TR_USER")
-PASSWORD = config("TR_PASSWORD")
-
-
 class BitTorrent_Client(object):
     def __init__(self):
         """Connection to BitTorrent client"""
@@ -26,7 +20,15 @@ class BitTorrent_Client(object):
 class Transmission(BitTorrent_Client):
     def __init__(self, directory):
         logging.debug("Connection to Transmission.")
-        self.client = Client(host=HOST, port=PORT, username=USERNAME, password=PASSWORD)
+        # Read the settings here, not at import time. Reading them at module
+        # scope meant that importing this package needed Transmission
+        # credentials, even to use Zim_File, which talks to nothing.
+        self.client = Client(
+            host=config("TR_HOST"),
+            port=config("TR_PORT", cast=int),
+            username=config("TR_USER"),
+            password=config("TR_PASSWORD"),
+        )
         self.directory = directory
 
     def add(self, torrent):
@@ -39,4 +41,4 @@ class Transmission(BitTorrent_Client):
         if torrents:
             self.client.remove_torrent(torrents[0].id, delete_data=True)
         else:
-            logging.warn("Client could not find torrent: %s", torrent_name)
+            logging.warning("Client could not find torrent: %s", torrent_name)
