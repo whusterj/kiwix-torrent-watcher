@@ -32,11 +32,11 @@ class Transmission(BitTorrent_Client):
         self.directory = directory
 
     def add(self, torrent):
-        logging.debug("Adding torrent: %s, directory: %s.", torrent, self.directory)
+        logging.info("Adding torrent: %s, directory: %s.", torrent, self.directory)
         self.client.add_torrent(torrent, download_dir=self.directory)
 
     def remove(self, torrent_name):
-        logging.debug("Removing and deleting torrent: %s.", torrent_name)
+        logging.info("Removing and deleting torrent: %s.", torrent_name)
         torrents = [t for t in self.client.get_torrents() if t.name == torrent_name]
         if torrents:
             self.client.remove_torrent(torrents[0].id, delete_data=True)

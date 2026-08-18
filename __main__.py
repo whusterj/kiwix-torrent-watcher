@@ -99,8 +99,9 @@ def to_update(local_files, remote_files):
 
 
 def clean(library, local_files, torrent_client, keep=0):
-    """Remove former file versions"""
+    """Remove former file versions. Returns how many were removed."""
     zims_local = sorted(local_files)
+    removed = 0
 
     for zim in library:
         local = [zfile for zfile in zims_local if zfile.basename == zim]
@@ -112,6 +113,9 @@ def clean(library, local_files, torrent_client, keep=0):
                 # logging.debug("Zim, Former: %s, %s", zim, [zfile.filename for zfile in former])
                 for zfile in former[keep:]:
                     torrent_client.remove(zfile.filename + ".zim")
+                    removed += 1
+
+    return removed
 
 
 def main(library, directory, url):
@@ -127,7 +131,7 @@ def main(library, directory, url):
     downloader = Transmission(directory)
 
     logging.info("Removing former versions…")
-    clean(library, zims_local, downloader)
+    removed = clean(library, zims_local, downloader)
 
     # Process
 
@@ -143,6 +147,9 @@ def main(library, directory, url):
     zims_remote = [zfile for zfile in files_remote if zfile.basename in library]
     logging.debug("Remote files: %s" % [zfile.filename for zfile in zims_remote])
 
+    added = 0
+    unmatched = 0
+
     for zim in library:
         # logging.debug("Zim: %s", zim)
         local, remote = (
@@ -155,6 +162,7 @@ def main(library, directory, url):
         if not remote:
             logging.warning("No remote match for tracked zim %s (renamed or discontinued upstream?)", zim)
             notify(f"WARNING: no remote match for tracked zim {zim} (renamed or discontinued upstream?)")
+            unmatched += 1
             continue
 
         torrent_file = remote[0].torrent("http://download.kiwix.org")
@@ -163,6 +171,7 @@ def main(library, directory, url):
             # Add torrent to BT client
             downloader.add(torrent_file)
             notify(f"New ZIM download queued: {remote[0].filename}")
+            added += 1
         else:  # zim present
             latest = remote[0]
             last_present = latest.filename in [zfile.filename for zfile in local]
@@ -170,6 +179,19 @@ def main(library, directory, url):
                 # Add torrent to BT client
                 downloader.add(torrent_file)
                 notify(f"ZIM update queued: {latest.filename}")
+                added += 1
+
+    # One line that says what the run achieved. Without it a quiet night and a
+    # run that died halfway look the same, which is how the remote listing
+    # stayed broken unnoticed.
+    logging.info(
+        "Done: %d tracked, %d remote versions seen, %d added, %d removed, %d with no remote match",
+        len(library),
+        len(zims_remote),
+        added,
+        removed,
+        unmatched,
+    )
 
 
 if __name__ == "__main__":
