@@ -1,6 +1,13 @@
-[tool.black]
+[tool.ruff]
 line-length = 140
-target-version = ["py39"]
+target-version = "py312"
 
-[tool.isort]
-profile="black"
+[tool.ruff.lint]
+# E and F are what flake8 checked here, and I is what flake8-isort did.
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+# The package sits at the repository root, and the tests are not a package, so
+# pytest would put tests/unit on sys.path and not the root.
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -62,7 +62,7 @@ def list_remote():
     out, err = process.communicate()
 
     if err:
-        logging.warn("Error while listing remote files: %s", err)
+        logging.warning("Error while listing remote files: %s", err)
 
     if out:
         decode_zim_paths(out)
